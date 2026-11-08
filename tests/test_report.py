@@ -51,7 +51,7 @@ def test_report_shows_error_and_skip_reason():
     text = format_report(result)
     save_line = next(l for l in text.splitlines() if l.startswith("save"))
 
-    assert save_line.rstrip().endswith("-")  # pominięte zadanie nie ma czasu
+    assert save_line.rstrip().endswith("-")
     assert "błąd: Zadanie 'load' zakończyło się błędem ValueError: zły plik" in text
     assert "pominięto: zależności: load (FAILED)" in text
     assert "BŁĄD (nieudane: 1, pominięte: 1, wszystkich: 2)" in text

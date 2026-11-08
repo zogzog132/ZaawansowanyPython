@@ -32,9 +32,6 @@ def recording(log, name, value=None):
     return fn
 
 
-# --- Przepływ wyników i parametry -------------------------------------------------------
-
-
 def test_empty_workflow_returns_empty_successful_result():
     result = run(Workflow())
 
@@ -75,7 +72,7 @@ def test_task_receives_exactly_direct_dependency_outputs():
 
     assert seen_inputs["a"] == {}
     assert seen_inputs["b"] == {"a": "A"}
-    assert seen_inputs["c"] == {"b": "B"}  # bez przechodniej zależności "a"
+    assert seen_inputs["c"] == {"b": "B"}
 
 
 def test_results_flow_through_diamond():
@@ -100,9 +97,9 @@ def test_params_are_passed_to_function():
 def test_inputs_and_params_are_read_only_for_task():
     def try_to_mutate(inputs, params):
         with pytest.raises(TypeError):
-            inputs["new"] = 1  # type: ignore[index]
+            inputs["new"] = 1  # type: ignore
         with pytest.raises(TypeError):
-            params["new"] = 1  # type: ignore[index]
+            params["new"] = 1  # type: ignore
         return "ok"
 
     wf = Workflow()
@@ -110,9 +107,6 @@ def test_inputs_and_params_are_read_only_for_task():
     wf.add_task(Task("t", try_to_mutate, ["source"], {"x": 1}))
 
     assert run(wf).outputs["t"] == "ok"
-
-
-# --- Kolejność wykonania ---------------------------------------------------------------
 
 
 def test_execution_order_follows_topological_plan():
@@ -139,9 +133,6 @@ def test_invalid_workflow_raises_before_any_task_runs():
     with pytest.raises(WorkflowValidationError, match="cykl"):
         run(wf)
     assert log == []
-
-
-# --- Awaria zadania i polityka błędów (kontynuacja niezależnych zadań) -----------------
 
 
 def test_failed_task_has_status_and_chained_error():
@@ -174,7 +165,7 @@ def test_dependents_of_failed_task_are_skipped_transitively():
 
     result = run(wf)
 
-    assert log == []  # funkcje pominiętych zadań nie są wywoływane
+    assert log == []
     assert result.task_states["a"].status is TaskStatus.FAILED
     assert result.task_states["b"].status is TaskStatus.SKIPPED
     assert result.task_states["c"].status is TaskStatus.SKIPPED
@@ -200,7 +191,7 @@ def test_task_with_one_failed_dependency_is_skipped():
 def test_independent_tasks_still_run_after_failure():
     log = []
     wf = Workflow()
-    wf.add_task(Task("a_fails", fail_with(RuntimeError("x"))))  # alfabetycznie pierwsze
+    wf.add_task(Task("a_fails", fail_with(RuntimeError("x"))))
     wf.add_task(Task("b_independent", recording(log, "b_independent", "B")))
     wf.add_task(Task("c_after", recording(log, "c_after", "C"), ["b_independent"]))
 
@@ -241,9 +232,6 @@ def test_keyboard_interrupt_is_not_swallowed():
         run(wf)
 
 
-# --- Czasy i niemutowalność wyniku ----------------------------------------------------
-
-
 def test_timings_are_recorded_for_executed_tasks_only():
     wf = Workflow()
     wf.add_task(Task("a", const(1)))
@@ -267,6 +255,6 @@ def test_result_is_read_only():
     result = run(wf)
 
     with pytest.raises(TypeError):
-        result.outputs["a"] = 2  # type: ignore[index]
+        result.outputs["a"] = 2  # type: ignore
     with pytest.raises(TypeError):
-        result.task_states["a"] = None  # type: ignore[index]
+        result.task_states["a"] = None  # type: ignore

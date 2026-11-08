@@ -1,12 +1,3 @@
-"""Synchroniczny silnik wykonawczy PyFlow.
-
-Polityka błędów: *kontynuuj niezależne zadania*.
-Zadanie, którego funkcja zgłosi wyjątek, otrzymuje status FAILED. Każde zadanie, którego
-choć jedna bezpośrednia zależność nie zakończyła się sukcesem, otrzymuje status SKIPPED
-(przez to pominięcie przenosi się na wszystkich potomków). Zadania niezależne od awarii
-są wykonywane do końca.
-"""
-
 import time
 from collections.abc import Mapping
 from types import MappingProxyType
@@ -18,13 +9,6 @@ from pyflow.results import RunResult, TaskExecutionError, TaskState, TaskStatus
 
 
 def run(workflow: Workflow) -> RunResult:
-    """Waliduje workflow, wykonuje zadania w kolejności topologicznej i zwraca wynik.
-
-    Błędna definicja workflowu (brakująca zależność, cykl) kończy się wyjątkiem
-    ``WorkflowValidationError`` jeszcze przed uruchomieniem jakiegokolwiek zadania.
-    Błędy zadań nie są zgłaszane, tylko zapisywane w wyniku – patrz
-    ``RunResult.raise_for_failure()``.
-    """
     run_started = time.perf_counter()
 
     workflow.validate()
@@ -80,13 +64,6 @@ def run(workflow: Workflow) -> RunResult:
 
 
 def _call_task(task: Task, inputs: Mapping[str, Any]) -> Any:
-    """Wywołuje funkcję użytkownika i opakowuje jej błąd w ``TaskExecutionError``.
-
-    To granica między silnikiem a kodem użytkownika, więc przechwytywany jest ``Exception``
-    (dowolny błąd zadania). Wyjątek nie jest tłumiony: trafia do wyniku z nazwą zadania,
-    a oryginał zostaje zachowany jako przyczyna. ``KeyboardInterrupt`` i ``SystemExit``
-    nie dziedziczą po ``Exception``, więc przerywają przebieg normalnie.
-    """
     try:
         return task.function(inputs, task.params)
     except Exception as exc:

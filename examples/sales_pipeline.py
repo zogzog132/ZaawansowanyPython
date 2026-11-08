@@ -1,18 +1,3 @@
-"""Przykład end-to-end: CSV -> walidacja -> agregacje -> raport JSON.
-
-Graf zadań:
-
-    read_csv -> clean_records -> aggregate_by_region  -> write_json_report
-                              -> aggregate_by_product ->
-
-Uruchomienie z katalogu głównego repozytorium:
-
-    python -m examples.sales_pipeline
-    python -m examples.sales_pipeline wejscie.csv wyjscie.json
-
-Przykład jest deterministyczny i nie wymaga dostępu do sieci.
-"""
-
 import argparse
 import csv
 import json
@@ -33,22 +18,17 @@ REQUIRED_FIELDS = ("date", "region", "product", "quantity", "unit_price")
 CENTS = Decimal("0.01")
 
 
-# --- Funkcje zadań: każda ma postać function(inputs, params) ---------------------------
-
-
 def read_csv(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> list[dict[str, str]]:
-    """Wczytuje plik CSV (UTF-8) jako listę słowników."""
     with open(params["path"], encoding="utf-8", newline="") as file:
         return list(csv.DictReader(file))
 
 
 def clean_records(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> dict[str, Any]:
-    """Waliduje i typuje rekordy; błędne rekordy trafiają do listy ``rejected`` z powodem."""
     rows = inputs["read_csv"]
     valid: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
 
-    # Linia 1 to nagłówek, więc pierwszy rekord danych jest w linii 2.
+    # linia 1 to nagłówek
     for line, row in enumerate(rows, start=2):
         try:
             valid.append(_parse_row(row))
@@ -59,7 +39,6 @@ def clean_records(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> dict[
 
 
 def aggregate(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
-    """Agreguje poprawne rekordy po polu wskazanym w ``params["group_by"]``."""
     key = params["group_by"]
     groups: dict[str, dict[str, Any]] = {}
 
@@ -78,7 +57,6 @@ def aggregate(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> dict[str,
 
 
 def write_json_report(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> str:
-    """Składa raport z wyników zależności, zapisuje go jako JSON i zwraca ścieżkę pliku."""
     cleaned = inputs["clean_records"]
     valid = cleaned["valid"]
 
@@ -105,9 +83,6 @@ def write_json_report(inputs: Mapping[str, Any], params: Mapping[str, Any]) -> s
         json.dump(report, file, ensure_ascii=False, indent=2, sort_keys=True)
         file.write("\n")
     return str(output_path)
-
-
-# --- Definicja workflowu --------------------------------------------------------------
 
 
 def build_workflow(input_csv: str | Path, output_json: str | Path) -> Workflow:
@@ -148,9 +123,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"\nRaport JSON zapisano w: {result.outputs['write_json_report']}")
         return 0
     return 1
-
-
-# --- Funkcje pomocnicze ---------------------------------------------------------------
 
 
 def _parse_row(row: Mapping[str, str | None]) -> dict[str, Any]:

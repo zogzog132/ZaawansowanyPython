@@ -1,9 +1,3 @@
-"""Tekstowy raport przebiegu z czasami wykonania.
-
-Raport jest wyłącznie widokiem na ``RunResult`` – tylko odczytuje dane i niczego w nich
-nie zmienia (wynik jest zresztą niemutowalny).
-"""
-
 from pyflow.results import RunResult, TaskStatus
 
 _NAME_HEADER = "Zadanie"
@@ -14,7 +8,6 @@ _TIME_WIDTH = len(_TIME_HEADER)
 
 
 def format_report(result: RunResult) -> str:
-    """Zwraca raport: status i czas każdego zadania, suma czasów zadań i czas całego przebiegu."""
     name_width = max([len(_NAME_HEADER), *(len(name) for name in result.task_states)])
     header = (
         f"{_NAME_HEADER:<{name_width}}  {_STATUS_HEADER:<{_STATUS_WIDTH}}  "
