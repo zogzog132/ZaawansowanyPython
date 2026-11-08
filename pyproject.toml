@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyflow"
-version = "0.1.0"
+version = "0.2.0"
 description = "Biblioteka do definiowania i uruchamiania przepływów danych (DAG)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,3 +15,7 @@ dev = ["pytest>=7.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
